@@ -68,5 +68,5 @@ joc/data/, joct/data/          # chain data per network (gitignored)
 
 - RPC binds `0.0.0.0` inside the container with CORS `*` — fine for local dev; on a public server, do not expose the RPC/WS ports directly (use a firewall or an authenticated reverse proxy).
 - Mainnet has been producing 5s blocks since 2022 — a full sync from genesis takes a while and needs a few hundred GB on SSD. Testnet is lighter.
-- Bootnodes are the official ones from the docs (updated Dec 2024). If the node can't find peers, check the docs for newer bootnodes and set `BOOTNODES` in the folder's `.env`.
+- Bootnodes are the official ones from the docs (verified current as of Dec 2025). If the node can't find peers, check the docs for newer bootnodes and set `BOOTNODES` in the folder's `.env`.
 - Migrating from the old single-folder layout: move `data/mainnet` to `joc/data/mainnet` and `data/testnet` to `joct/data/testnet` to keep synced chain data.
