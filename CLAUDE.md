@@ -31,6 +31,9 @@ Key facts that are easy to get wrong:
 docker compose up -d
 docker compose logs -f
 
+# Node + optional stateless explorer (lite-explorer; mainnet :8080, testnet :18080)
+docker compose --profile explorer up -d
+
 # Validate after editing compose files (run in each changed folder)
 docker compose config --quiet
 

@@ -24,3 +24,19 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  # Optional stateless explorer (block/tx browsing only, no address history).
+  # Runs in the browser against the node's RPC: start with
+  #   docker compose --profile explorer up -d
+  explorer:
+    image: alethio/ethereum-lite-explorer:latest
+    # Image is amd64-only; runs under emulation on ARM hosts (fine for a static site)
+    platform: linux/amd64
+    container_name: joct-explorer
+    profiles: [explorer]
+    restart: unless-stopped
+    environment:
+      # Must be reachable from the user's BROWSER, not from inside the container
+      APP_NODE_URL: ${EXPLORER_NODE_URL:-http://localhost:18545}
+    ports:
+      - "${EXPLORER_PORT:-18080}:80"

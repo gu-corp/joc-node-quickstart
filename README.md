@@ -47,8 +47,20 @@ curl -s -X POST -H 'Content-Type: application/json' \
 | HTTP JSON-RPC | 8545 | 18545 |
 | WebSocket | 8546 | 18546 |
 | P2P (TCP/UDP) | 30303 | 30304 |
+| Explorer (optional) | 8080 | 18080 |
 
 Override host ports in each folder's `.env`.
+
+## Optional block explorer
+
+Each folder ships an opt-in [ethereum-lite-explorer](https://github.com/Alethio/ethereum-lite-explorer) service — stateless, no database, the browser talks straight to the node's RPC:
+
+```bash
+docker compose --profile explorer up -d   # node + explorer
+docker compose --profile explorer down    # stop both
+```
+
+Then open http://localhost:8080 (mainnet) or http://localhost:18080 (testnet). It browses blocks/txs/accounts live from the node; there is no indexer, so per-address transaction history is not available. `EXPLORER_NODE_URL` must be the RPC URL as seen from your browser (default `http://localhost:8545`) — change it in `.env` if the node runs on a remote host.
 
 ## Layout
 
