@@ -1,12 +1,11 @@
 services:
   joc-node:
     image: ethereum/client-go:v1.13.5
-    container_name: joc-node-${NETWORK:-mainnet}
+    container_name: joc-node-mainnet
     restart: unless-stopped
     stop_grace_period: 3m
     entrypoint: ["/bin/sh", "/entrypoint.sh"]
     environment:
-      NETWORK: ${NETWORK:-mainnet}
       BOOTNODES: ${BOOTNODES:-}
       HTTP_APIS: ${HTTP_APIS:-}
       WS_APIS: ${WS_APIS:-}
@@ -17,10 +16,10 @@ services:
       - "${P2P_PORT:-30303}:30303/udp"
     volumes:
       - ./data:/data
-      - ./genesis:/genesis:ro
-      - ./scripts/entrypoint.sh:/entrypoint.sh:ro
+      - ./genesis.json:/genesis.json:ro
+      - ./entrypoint.sh:/entrypoint.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "geth attach --datadir /data/$${NETWORK:-mainnet} --exec 'eth.blockNumber' >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "geth attach --datadir /data/mainnet --exec 'eth.blockNumber' >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
