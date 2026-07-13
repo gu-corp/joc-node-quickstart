@@ -7,7 +7,7 @@ Spin up a [Japan Open Chain](https://www.japanopenchain.org/en/docs/developer/co
 | mainnet | `joc/` | JOC | 81 | 81 | https://explorer.japanopenchain.org |
 | testnet | `joct/` | JOCT | 10081 | 361257328 | https://explorer.testnet.japanopenchain.org |
 
-Both networks are Clique PoA (5s blocks). Runs Geth `v1.13.5`, the version officially tested by JOC. Each folder is fully self-contained: compose file, genesis, entrypoint, and `.env` all live inside it.
+Both networks are Clique PoA (5s blocks). Runs Geth `v1.13.5`, the version officially tested by JOC (override with `GETH_VERSION` in `.env`). Each folder is fully self-contained: compose file, genesis, entrypoint, and `.env` all live inside it.
 
 ## Quick start
 

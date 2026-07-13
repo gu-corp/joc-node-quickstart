@@ -17,8 +17,8 @@ fi
 exec geth \
   --datadir "$DATADIR" \
   --networkid "$NETWORKID" \
-  --syncmode full \
-  --gcmode full \
+  --syncmode "${SYNCMODE:-full}" \
+  --gcmode "${GCMODE:-full}" \
   --bootnodes "${BOOTNODES:-$DEFAULT_BOOTNODES}" \
   --port 30303 \
   --http \

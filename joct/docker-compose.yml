@@ -1,6 +1,6 @@
 services:
   joct-node:
-    image: ethereum/client-go:v1.13.5
+    image: ethereum/client-go:${GETH_VERSION:-v1.13.5}
     container_name: joct-node
     restart: unless-stopped
     stop_grace_period: 3m
@@ -9,6 +9,8 @@ services:
       BOOTNODES: ${BOOTNODES:-}
       HTTP_APIS: ${HTTP_APIS:-}
       WS_APIS: ${WS_APIS:-}
+      SYNCMODE: ${SYNCMODE:-}
+      GCMODE: ${GCMODE:-}
     ports:
       - "${HTTP_RPC_PORT:-18545}:8545"
       - "${WS_RPC_PORT:-18546}:8546"
