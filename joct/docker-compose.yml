@@ -1,7 +1,7 @@
 services:
-  joc-node:
+  joct-node:
     image: ethereum/client-go:v1.13.5
-    container_name: joc-node-testnet
+    container_name: joct-node
     restart: unless-stopped
     stop_grace_period: 3m
     entrypoint: ["/bin/sh", "/entrypoint.sh"]
