@@ -8,24 +8,45 @@ services:
     environment:
       BOOTNODES: ${BOOTNODES:-}
       HTTP_APIS: ${HTTP_APIS:-}
-      WS_APIS: ${WS_APIS:-}
-      SYNCMODE: ${SYNCMODE:-}
-      GCMODE: ${GCMODE:-}
     ports:
       - "${HTTP_RPC_PORT:-18545}:8545"
-      - "${WS_RPC_PORT:-18546}:8546"
       - "${P2P_PORT:-30304}:30303"
       - "${P2P_PORT:-30304}:30303/udp"
     volumes:
-      - ./data:/data
-      - ./genesis.json:/genesis.json:ro
-      - ./entrypoint.sh:/entrypoint.sh:ro
+      - ./el/data:/data
+      - ./el/genesis.json:/genesis.json:ro
+      - ./el/entrypoint.sh:/entrypoint.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "geth attach --datadir /data/testnet --exec 'eth.blockNumber' >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "geth attach --datadir /data --exec 'eth.blockNumber' >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  joct-lighthouse:
+    image: sigp/lighthouse:${LIGHTHOUSE_VERSION:-latest}
+    container_name: joct-lighthouse
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    depends_on:
+      joct-node:
+        condition: service_healthy
+    environment:
+      BOOT_ENRS: ${BOOT_ENRS:-}
+    ports:
+      - "${BEACON_HTTP_PORT:-15052}:5052"
+      - "${BEACON_P2P_PORT:-19000}:9000"
+      - "${BEACON_P2P_PORT:-19000}:9000/udp"
+    volumes:
+      - ./cl/data:/data
+      - ./cl/config.yaml:/config.yaml:ro
+      - ./cl/genesis.ssz:/genesis.ssz:ro
+      - ./cl/deposit_contract_block.txt:/deposit_contract_block.txt:ro
+      - ./cl/entrypoint.sh:/entrypoint.sh:ro
+      # Read-only access to the JWT secret the joct-node container generates on
+      # ./el/data, so the two clients can authenticate over the Engine API without
+      # sharing a whole datadir.
+      - ./el/data:/jwt:ro
 
   # Optional stateless explorer (block/tx browsing only, no address history).
   # Runs in the browser against the node's RPC: start with

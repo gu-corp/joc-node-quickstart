@@ -1,0 +1,274 @@
+# =====================================================================
+# DRAFT — NOT ACTIVE
+# ---------------------------------------------------------------------
+# JOC testnet (JOCT) consensus-layer (beacon chain) configuration.
+#
+# The parameters below are now decided — no value is TBD — but the network
+# they describe has not started. As of 2026-08-28:
+#
+#   * The deposit contract is deployed and empty. get_deposit_count() is 0,
+#     and MIN_GENESIS_ACTIVE_VALIDATOR_COUNT is 2, so beacon genesis has not
+#     triggered. MIN_GENESIS_TIME has already passed, which means genesis is
+#     now gated purely on the second deposit landing.
+#   * No beacon node answers on the JOCT endpoints, so nothing here has been
+#     checked against a running chain — unlike the execution-layer files in
+#     this directory, which CI verifies against the live network.
+#   * TERMINAL_TOTAL_DIFFICULTY is the max-uint64 stub, i.e. "never". The
+#     execution layer is Clique, difficulty 1 per block, currently at total
+#     difficulty ~31M; it would take ~2.9 trillion years to reach the stub.
+#     The merge is not scheduled.
+#   * genesis.ssz does not exist yet and cannot, since there are no deposits
+#     to derive a genesis state from.
+#
+# So: do NOT point a production beacon node at this file expecting it to
+# join anything. See ../README.md#beacon-chain-status for what is still missing.
+#
+# The execution-layer counterpart lives in ./genesis.json.
+# =====================================================================
+
+PRESET_BASE: gnosis
+
+# Free-form short name of the network that this configuration applies to - known
+# canonical network names include:
+# * 'joc' - there can be only one
+# * 'joct' - testnet
+# * 'sandbox1' - development network
+# Must match the regex: [a-z0-9-]
+CONFIG_NAME: joct
+
+# Transition
+# ---------------------------------------------------------------
+# Max uint64 (2**64 - 1): the merge is not scheduled. Clique adds 1 difficulty
+# per 5-second block, so this value is unreachable by design, not an estimate.
+TERMINAL_TOTAL_DIFFICULTY: 18446744073709551615
+# By default, do not use these params
+TERMINAL_BLOCK_HASH: 0x0000000000000000000000000000000000000000000000000000000000000000
+TERMINAL_BLOCK_HASH_ACTIVATION_EPOCH: 18446744073709551615
+
+
+# Genesis
+# ---------------------------------------------------------------
+# Recommend 2^x (e.g 2**12 = 4,096). 2 is deliberate for a testnet bring-up;
+# it is also the smallest set that can finalize, so treat the chain as
+# haltable until more validators deposit.
+MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: 2
+# 2026-08-28T08:32:00Z. Already in the past with 0 deposits recorded, so
+# beacon genesis will be fixed by the eth1 block carrying the 2nd deposit:
+# genesis_time = that block's timestamp + GENESIS_DELAY.
+MIN_GENESIS_TIME: 1787905920
+# Low bytes encode the JOCT chain id: 10081 = 0x2761. Distinct from joc
+# mainnet (0x00000051) and sandbox1 (0x00000539), so the fork digests cannot
+# collide across the three networks.
+GENESIS_FORK_VERSION: 0x00002761
+# Customized for JOC: ~estimate hours
+GENESIS_DELAY: 6000
+
+
+# Forking
+# ---------------------------------------------------------------
+# Altair and Bellatrix activate at genesis+5 and genesis+10 epochs. Everything
+# from Capella on is disabled for now:
+#  - These may be re-assigned to another fork-version later
+#  - Temporarily set to max uint64 value: 2**64 - 1
+#
+# Note that Bellatrix activating does not merge the chain — that needs
+# TERMINAL_TOTAL_DIFFICULTY, which is the max-uint64 stub above.
+
+# Altair
+ALTAIR_FORK_VERSION: 0x01002761
+ALTAIR_FORK_EPOCH: 5
+# Bellatrix
+BELLATRIX_FORK_VERSION: 0x02002761
+BELLATRIX_FORK_EPOCH: 10
+# Capella
+CAPELLA_FORK_VERSION: 0x03002761
+CAPELLA_FORK_EPOCH: 18446744073709551615
+# Deneb
+DENEB_FORK_VERSION: 0x04002761
+DENEB_FORK_EPOCH: 18446744073709551615
+# Electra
+ELECTRA_FORK_VERSION: 0x05002761
+ELECTRA_FORK_EPOCH: 18446744073709551615
+# Fulu
+FULU_FORK_VERSION: 0x06002761
+FULU_FORK_EPOCH: 18446744073709551615
+# Gloas
+GLOAS_FORK_VERSION: 0x07002761
+GLOAS_FORK_EPOCH: 18446744073709551615
+
+# Time parameters
+# ---------------------------------------------------------------
+# 5 seconds
+SECONDS_PER_SLOT: 5
+# 5000 milliseconds
+SLOT_DURATION_MS: 5000
+# 5 (matches the Clique period on JOCT — see ./genesis_details.yaml)
+SECONDS_PER_ETH1_BLOCK: 5
+# 2**8 (= 256) epochs ~5.7 hours
+MIN_VALIDATOR_WITHDRAWABILITY_DELAY: 256
+# 2**8 (= 256) epochs ~5.7 hours
+SHARD_COMMITTEE_PERIOD: 256
+# 2**10 (= 1024) ~1.4 hour
+ETH1_FOLLOW_DISTANCE: 1024
+# 1667 basis points, ~17% of SLOT_DURATION_MS
+PROPOSER_REORG_CUTOFF_BPS: 1667
+# 3333 basis points, ~33% of SLOT_DURATION_MS
+ATTESTATION_DUE_BPS: 3333
+# 6667 basis points, ~67% of SLOT_DURATION_MS
+AGGREGATE_DUE_BPS: 6667
+
+# Altair
+# 3333 basis points, ~33% of SLOT_DURATION_MS
+SYNC_MESSAGE_DUE_BPS: 3333
+# 6667 basis points, ~67% of SLOT_DURATION_MS
+CONTRIBUTION_DUE_BPS: 6667
+
+# Gloas
+# 2500 basis points, 25% of SLOT_DURATION_MS
+ATTESTATION_DUE_BPS_GLOAS: 2500
+# 5000 basis points, 50% of SLOT_DURATION_MS
+AGGREGATE_DUE_BPS_GLOAS: 5000
+# 2500 basis points, 25% of SLOT_DURATION_MS
+SYNC_MESSAGE_DUE_BPS_GLOAS: 2500
+# 5000 basis points, 50% of SLOT_DURATION_MS
+CONTRIBUTION_DUE_BPS_GLOAS: 5000
+# 7500 basis points, 75% of SLOT_DURATION_MS
+PAYLOAD_ATTESTATION_DUE_BPS: 7500
+
+# EIP7805
+# 7500 basis points, 75% of SLOT_DURATION_MS
+VIEW_FREEZE_CUTOFF_BPS: 7500
+# 6667 basis points, ~67% of SLOT_DURATION_MS
+INCLUSION_LIST_SUBMISSION_DUE_BPS: 6667
+# 9167 basis points, ~92% of SLOT_DURATION_MS
+PROPOSER_INCLUSION_LIST_CUTOFF_BPS: 9167
+
+# Validator cycle
+# ---------------------------------------------------------------
+# 2**2 (= 4)
+INACTIVITY_SCORE_BIAS: 4
+# 2**4 (= 16)
+INACTIVITY_SCORE_RECOVERY_RATE: 16
+# 2**4 * 10**9 (= 16,000,000,000) Gwei
+EJECTION_BALANCE: 16000000000
+# 2**2 (= 4)
+MIN_PER_EPOCH_CHURN_LIMIT: 4
+# 2**12 (= 4096)
+CHURN_LIMIT_QUOTIENT: 4096
+
+# Deneb
+# 2**3 (= 8) (*deprecated*)
+MAX_PER_EPOCH_ACTIVATION_CHURN_LIMIT: 2
+
+# Electra
+# 2**7 * 10**9 (= 128,000,000,000) Gwei
+MIN_PER_EPOCH_CHURN_LIMIT_ELECTRA: 128000000000
+# 2**6 * 10**9 (= 64,000,000,000)
+MAX_PER_EPOCH_ACTIVATION_EXIT_CHURN_LIMIT: 64000000000
+
+# Fork choice
+# ---------------------------------------------------------------
+# 40%
+PROPOSER_SCORE_BOOST: 40
+# 20%
+REORG_HEAD_WEIGHT_THRESHOLD: 20
+# 160%
+REORG_PARENT_WEIGHT_THRESHOLD: 160
+# 2 epochs
+REORG_MAX_EPOCHS_SINCE_FINALIZATION: 2
+
+
+# Deposit contract
+# ---------------------------------------------------------------
+# DEPOSIT_NETWORK_ID is the eth1 p2p network id — the value geth takes as
+# --networkid — so it is 361257328, NOT the chain id. See ./genesis_details.yaml.
+DEPOSIT_CHAIN_ID: 10081
+DEPOSIT_NETWORK_ID: 361257328
+# Deployed 2026-08-28 in block 19262622, and verified against the node: it
+# answers get_deposit_root() with the canonical empty-tree root. No validator
+# has deposited yet. See ./deposit_contract.txt and ../README.md.
+DEPOSIT_CONTRACT_ADDRESS: 0x2d871682c97d93401F0348835af88A1D98ed6564
+
+# Networking
+# ---------------------------------------------------------------
+# 10 * 2**20 (= 10485760, 10 MiB)
+MAX_PAYLOAD_SIZE: 10485760
+# 2**10 (= 1024)
+MAX_REQUEST_BLOCKS: 1024
+# 2**8 (= 256)
+EPOCHS_PER_SUBNET_SUBSCRIPTION: 256
+# 33024, ~31 days
+MIN_EPOCHS_FOR_BLOCK_REQUESTS: 33024
+# 2**5 (= 32) slots
+ATTESTATION_PROPAGATION_SLOT_RANGE: 32
+# 500ms
+MAXIMUM_GOSSIP_CLOCK_DISPARITY: 500
+MESSAGE_DOMAIN_INVALID_SNAPPY: 0x00000000
+MESSAGE_DOMAIN_VALID_SNAPPY: 0x01000000
+# 2 subnets per node
+SUBNETS_PER_NODE: 2
+# 2**8 (= 64)
+ATTESTATION_SUBNET_COUNT: 64
+# 0 bits
+ATTESTATION_SUBNET_EXTRA_BITS: 0
+# ceillog2(ATTESTATION_SUBNET_COUNT) + ATTESTATION_SUBNET_EXTRA_BITS
+ATTESTATION_SUBNET_PREFIX_BITS: 6
+
+# Deneb
+# 2**7 (=128)
+MAX_REQUEST_BLOCKS_DENEB: 128
+# 2**14 (= 16384 epochs, ~18 days)
+MIN_EPOCHS_FOR_BLOB_SIDECARS_REQUESTS: 16384
+# 6
+BLOB_SIDECAR_SUBNET_COUNT: 6
+# uint64(2)
+MAX_BLOBS_PER_BLOCK: 2
+# MAX_REQUEST_BLOCKS_DENEB * MAX_BLOBS_PER_BLOCK
+MAX_REQUEST_BLOB_SIDECARS: 768
+
+# Electra
+# 2
+BLOB_SIDECAR_SUBNET_COUNT_ELECTRA: 2
+# uint64(2)
+MAX_BLOBS_PER_BLOCK_ELECTRA: 2
+# MAX_REQUEST_BLOCKS_DENEB * MAX_BLOBS_PER_BLOCK_ELECTRA
+MAX_REQUEST_BLOB_SIDECARS_ELECTRA: 256
+
+# Fulu
+# 2**7 (= 128) groups
+NUMBER_OF_CUSTODY_GROUPS: 128
+# 2**7 (= 128) subnets
+DATA_COLUMN_SIDECAR_SUBNET_COUNT: 128
+# MAX_REQUEST_BLOCKS_DENEB * NUMBER_OF_COLUMNS (= 128 * 128) sidecars
+MAX_REQUEST_DATA_COLUMN_SIDECARS: 16384
+# 2**3 (= 8) samples
+SAMPLES_PER_SLOT: 8
+# 2**2 (= 4) sidecars
+CUSTODY_REQUIREMENT: 4
+# 2**3 (= 8) sidecars
+VALIDATOR_CUSTODY_REQUIREMENT: 8
+# 2**5 * 10**9 (= 32,000,000,000) Gwei
+BALANCE_PER_ADDITIONAL_CUSTODY_GROUP: 32000000000
+# 2**14 (= 16384 epochs, ~18 days)
+MIN_EPOCHS_FOR_DATA_COLUMN_SIDECARS_REQUESTS: 16384
+
+# Gloas
+# 2**7 (= 128) payloads
+MAX_REQUEST_PAYLOADS: 128
+
+# EIP7441
+# 2**8 (= 256) epochs
+EPOCHS_PER_SHUFFLING_PHASE: 256
+# 2**1 (= 2) epochs
+PROPOSER_SELECTION_GAP: 2
+
+# EIP7805
+# 2**4 (= 16) inclusion lists
+MAX_REQUEST_INCLUSION_LIST: 16
+# 2**13 (= 8,192) bytes
+MAX_BYTES_PER_INCLUSION_LIST: 8192
+
+# Blob Scheduling
+# ---------------------------------------------------------------
+
+BLOB_SCHEDULE: []
