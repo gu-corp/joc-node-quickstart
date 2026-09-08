@@ -1,29 +1,11 @@
 # =====================================================================
-# DRAFT — NOT ACTIVE
-# ---------------------------------------------------------------------
 # JOC testnet (JOCT) consensus-layer (beacon chain) configuration.
 #
-# The parameters below are now decided — no value is TBD — but the network
-# they describe has not started. As of 2026-08-28:
+# This is the authoritative config for the JOCT beacon chain, live since
+# genesis at 1787930185 (2026-08-28T15:16:25Z). Verified against a running
+# node's /eth/v1/config/spec. See ../README.md.
 #
-#   * The deposit contract is deployed and empty. get_deposit_count() is 0,
-#     and MIN_GENESIS_ACTIVE_VALIDATOR_COUNT is 2, so beacon genesis has not
-#     triggered. MIN_GENESIS_TIME has already passed, which means genesis is
-#     now gated purely on the second deposit landing.
-#   * No beacon node answers on the JOCT endpoints, so nothing here has been
-#     checked against a running chain — unlike the execution-layer files in
-#     this directory, which CI verifies against the live network.
-#   * TERMINAL_TOTAL_DIFFICULTY is the max-uint64 stub, i.e. "never". The
-#     execution layer is Clique, difficulty 1 per block, currently at total
-#     difficulty ~31M; it would take ~2.9 trillion years to reach the stub.
-#     The merge is not scheduled.
-#   * genesis.ssz does not exist yet and cannot, since there are no deposits
-#     to derive a genesis state from.
-#
-# So: do NOT point a production beacon node at this file expecting it to
-# join anything. See ../README.md#beacon-chain-status for what is still missing.
-#
-# The execution-layer counterpart lives in ./genesis.json.
+# Execution-layer counterpart: ./genesis.json
 # =====================================================================
 
 PRESET_BASE: gnosis
@@ -38,9 +20,9 @@ CONFIG_NAME: joct
 
 # Transition
 # ---------------------------------------------------------------
-# Max uint64 (2**64 - 1): the merge is not scheduled. Clique adds 1 difficulty
-# per 5-second block, so this value is unreachable by design, not an estimate.
-TERMINAL_TOTAL_DIFFICULTY: 18446744073709551615
+# Set 2026-09-05; at Clique's ~1 difficulty per 5s block the chain reaches it
+# ~2026-09-07. Matches the running beacon node's /eth/v1/config/spec.
+TERMINAL_TOTAL_DIFFICULTY: 31123684
 # By default, do not use these params
 TERMINAL_BLOCK_HASH: 0x0000000000000000000000000000000000000000000000000000000000000000
 TERMINAL_BLOCK_HASH_ACTIVATION_EPOCH: 18446744073709551615
@@ -48,31 +30,23 @@ TERMINAL_BLOCK_HASH_ACTIVATION_EPOCH: 18446744073709551615
 
 # Genesis
 # ---------------------------------------------------------------
-# Recommend 2^x (e.g 2**12 = 4,096). 2 is deliberate for a testnet bring-up;
-# it is also the smallest set that can finalize, so treat the chain as
-# haltable until more validators deposit.
+# Smallest set that can finalize; finality stops if one of the two drops.
 MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: 2
-# 2026-08-28T08:32:00Z. Already in the past with 0 deposits recorded, so
-# beacon genesis will be fixed by the eth1 block carrying the 2nd deposit:
-# genesis_time = that block's timestamp + GENESIS_DELAY.
+# 2026-08-28T08:32:00Z. Elapsed before any deposit, so actual genesis was fixed
+# by the block carrying the 2nd deposit: its timestamp + GENESIS_DELAY = 1787930185.
 MIN_GENESIS_TIME: 1787905920
-# Low bytes encode the JOCT chain id: 10081 = 0x2761. Distinct from joc
-# mainnet (0x00000051) and sandbox1 (0x00000539), so the fork digests cannot
-# collide across the three networks.
+# Low bytes encode the JOCT chain id, 10081 = 0x2761 — distinct from joc
+# mainnet (0x51) and sandbox1 (0x539), so fork digests cannot collide.
 GENESIS_FORK_VERSION: 0x00002761
-# Customized for JOC: ~estimate hours
+# 6000 seconds (~1.7 hours)
 GENESIS_DELAY: 6000
 
 
 # Forking
 # ---------------------------------------------------------------
-# Altair and Bellatrix activate at genesis+5 and genesis+10 epochs. Everything
-# from Capella on is disabled for now:
-#  - These may be re-assigned to another fork-version later
-#  - Temporarily set to max uint64 value: 2**64 - 1
-#
-# Note that Bellatrix activating does not merge the chain — that needs
-# TERMINAL_TOTAL_DIFFICULTY, which is the max-uint64 stub above.
+# Capella onwards is disabled at max uint64, and may be re-assigned to another
+# fork version later. The merge happens when the execution layer reaches
+# TERMINAL_TOTAL_DIFFICULTY above; Bellatrix (epoch 10) is long active.
 
 # Altair
 ALTAIR_FORK_VERSION: 0x01002761
@@ -157,13 +131,13 @@ MIN_PER_EPOCH_CHURN_LIMIT: 4
 CHURN_LIMIT_QUOTIENT: 4096
 
 # Deneb
-# 2**3 (= 8) (*deprecated*)
+# 2 (*deprecated*)
 MAX_PER_EPOCH_ACTIVATION_CHURN_LIMIT: 2
 
 # Electra
 # 2**7 * 10**9 (= 128,000,000,000) Gwei
 MIN_PER_EPOCH_CHURN_LIMIT_ELECTRA: 128000000000
-# 2**6 * 10**9 (= 64,000,000,000)
+# 2**6 * 10**9 (= 64,000,000,000) Gwei
 MAX_PER_EPOCH_ACTIVATION_EXIT_CHURN_LIMIT: 64000000000
 
 # Fork choice
@@ -184,9 +158,7 @@ REORG_MAX_EPOCHS_SINCE_FINALIZATION: 2
 # --networkid — so it is 361257328, NOT the chain id. See ./genesis_details.yaml.
 DEPOSIT_CHAIN_ID: 10081
 DEPOSIT_NETWORK_ID: 361257328
-# Deployed 2026-08-28 in block 19262622, and verified against the node: it
-# answers get_deposit_root() with the canonical empty-tree root. No validator
-# has deposited yet. See ./deposit_contract.txt and ../README.md.
+# Deployed 2026-08-28 in block 19262622. See ./deposit_contract.txt.
 DEPOSIT_CONTRACT_ADDRESS: 0x2d871682c97d93401F0348835af88A1D98ed6564
 
 # Networking
@@ -207,7 +179,7 @@ MESSAGE_DOMAIN_INVALID_SNAPPY: 0x00000000
 MESSAGE_DOMAIN_VALID_SNAPPY: 0x01000000
 # 2 subnets per node
 SUBNETS_PER_NODE: 2
-# 2**8 (= 64)
+# 2**6 (= 64)
 ATTESTATION_SUBNET_COUNT: 64
 # 0 bits
 ATTESTATION_SUBNET_EXTRA_BITS: 0
@@ -217,13 +189,14 @@ ATTESTATION_SUBNET_PREFIX_BITS: 6
 # Deneb
 # 2**7 (=128)
 MAX_REQUEST_BLOCKS_DENEB: 128
-# 2**14 (= 16384 epochs, ~18 days)
+# 2**14 (= 16384 epochs, ~15 days at 80s epochs)
 MIN_EPOCHS_FOR_BLOB_SIDECARS_REQUESTS: 16384
 # 6
 BLOB_SIDECAR_SUBNET_COUNT: 6
 # uint64(2)
 MAX_BLOBS_PER_BLOCK: 2
-# MAX_REQUEST_BLOCKS_DENEB * MAX_BLOBS_PER_BLOCK
+# 768. NOTE: exceeds MAX_REQUEST_BLOCKS_DENEB * MAX_BLOBS_PER_BLOCK (= 256);
+# kept as supplied — it is a request-size cap, so a high value is harmless.
 MAX_REQUEST_BLOB_SIDECARS: 768
 
 # Electra
@@ -249,7 +222,7 @@ CUSTODY_REQUIREMENT: 4
 VALIDATOR_CUSTODY_REQUIREMENT: 8
 # 2**5 * 10**9 (= 32,000,000,000) Gwei
 BALANCE_PER_ADDITIONAL_CUSTODY_GROUP: 32000000000
-# 2**14 (= 16384 epochs, ~18 days)
+# 2**14 (= 16384 epochs, ~15 days at 80s epochs)
 MIN_EPOCHS_FOR_DATA_COLUMN_SIDECARS_REQUESTS: 16384
 
 # Gloas
