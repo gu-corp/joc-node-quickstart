@@ -17,15 +17,40 @@ services:
       - "${P2P_PORT:-30303}:30303"
       - "${P2P_PORT:-30303}:30303/udp"
     volumes:
-      - ./data:/data
-      - ./genesis.json:/genesis.json:ro
-      - ./entrypoint.sh:/entrypoint.sh:ro
+      - ./el/data:/data
+      - ./el/genesis.json:/genesis.json:ro
+      - ./el/entrypoint.sh:/entrypoint.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "geth attach --datadir /data/mainnet --exec 'eth.blockNumber' >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  joc-lighthouse:
+    image: sigp/lighthouse:${LIGHTHOUSE_VERSION:-v7.0.1}
+    container_name: joc-lighthouse
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    depends_on:
+      joc-node:
+        condition: service_healthy
+    environment:
+      BOOT_ENRS: ${BOOT_ENRS:-}
+    ports:
+      - "${BEACON_HTTP_PORT:-5052}:5052"
+      - "${BEACON_P2P_PORT:-9000}:9000"
+      - "${BEACON_P2P_PORT:-9000}:9000/udp"
+    volumes:
+      - ./cl/data:/data
+      - ./cl/config.yaml:/config.yaml:ro
+      - ./cl/genesis.ssz:/genesis.ssz:ro
+      - ./cl/deposit_contract_block.txt:/deposit_contract_block.txt:ro
+      - ./cl/entrypoint.sh:/entrypoint.sh:ro
+      # Read-only access to the JWT secret the joc-node container generates on
+      # ./el/data/mainnet, so the two clients can authenticate over the Engine
+      # API without sharing the whole execution datadir.
+      - ./el/data:/jwt:ro
 
   # Optional stateless explorer (block/tx browsing only, no address history).
   # Runs in the browser against the node's RPC: start with

@@ -8,6 +8,19 @@ DEFAULT_BOOTNODES="enode://c387e2b4e5231022ef30144c41fbd883139e9b5f1f4649c3d51c1
 
 DATADIR=/data/mainnet
 GENESIS=/genesis.json
+JWTSECRET=/data/mainnet/jwtsecret
+
+mkdir -p "$DATADIR"
+
+# Shared secret that authenticates the Engine API (authrpc) call between geth and
+# lighthouse. Generated once here; cl/entrypoint.sh reads it read-only from ../el/data
+# (mounted at /jwt in the lighthouse container) and just waits for the file.
+# Uses od/tr (busybox-safe) instead of openssl, which the geth image doesn't ship.
+if [ ! -s "$JWTSECRET" ]; then
+  echo "[mainnet] Generating JWT secret at $JWTSECRET..."
+  head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$JWTSECRET"
+  chmod 644 "$JWTSECRET"
+fi
 
 if [ ! -d "$DATADIR/geth/chaindata" ]; then
   echo "[mainnet] Initializing datadir from $GENESIS..."
@@ -32,4 +45,8 @@ exec geth \
   --ws.port 8546 \
   --ws.api "${WS_APIS:-eth,net,web3}" \
   --ws.origins '*' \
+  --authrpc.addr 0.0.0.0 \
+  --authrpc.port 8551 \
+  --authrpc.vhosts '*' \
+  --authrpc.jwtsecret "$JWTSECRET" \
   "$@"
